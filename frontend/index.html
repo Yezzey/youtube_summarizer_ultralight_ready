@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>YouTube Video Summarizer</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 30px auto; }
+        h1 { text-align: center; }
+        #status { margin-top: 20px; }
+        textarea { width: 100%; height: 200px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <h1>YouTube Summarizer (PL/EN)</h1>
+    <label for="url">Paste YouTube URL:</label>
+    <input type="text" id="url" style="width:100%" placeholder="https://youtu.be/xyz123">
+    <button onclick="submit()">Summarize</button>
+
+    <div id="status"></div>
+    <textarea id="summary" placeholder="Summary will appear here..."></textarea>
+
+    <script>
+        async function submit() {
+            const url = document.getElementById("url").value;
+            document.getElementById("status").innerText = "Processing, please wait...";
+            document.getElementById("summary").value = "";
+
+            const response = await fetch("/api/summarize", {
+                method: "POST",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify({ url })
+            });
+
+            const result = await response.json();
+            if (result.error) {
+                document.getElementById("status").innerText = "Error: " + result.error;
+            } else {
+                const timeMsg = result.used_vosk
+                    ? `⏱️ Estimated time: ${result.estimated_time}s (AI transcription used)`
+                    : `⏱️ Estimated time: ${result.estimated_time}s (YouTube subtitles used)`;
+                document.getElementById("status").innerText = `✅ Done! ${timeMsg}`;
+                document.getElementById("summary").value = result.summary;
+            }
+        }
+    </script>
+</body>
+</html>
